@@ -1,1 +1,1 @@
-{"s3" #(fi.yle.tools.aws.maven.SimpleStorageServiceWagon.)}
+{"s3" #(SimpleStorageServiceWagon.)}
