@@ -32,6 +32,8 @@ import org.apache.maven.wagon.authentication.AuthenticationException;
 import org.apache.maven.wagon.authentication.AuthenticationInfo;
 import org.apache.maven.wagon.proxy.ProxyInfoProvider;
 import org.apache.maven.wagon.repository.Repository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.*;
@@ -48,6 +50,8 @@ import java.util.regex.Pattern;
  * metadata for credentials.
  */
 public final class SimpleStorageServiceWagon extends AbstractWagon {
+
+    private static final Logger log = LoggerFactory.getLogger(SimpleStorageServiceWagon.class);
 
     private static final String KEY_FORMAT = "%s%s";
 
@@ -67,6 +71,7 @@ public final class SimpleStorageServiceWagon extends AbstractWagon {
 
     private volatile String baseDirectory;
 
+    private String defaultAwsProfile = "default";
     /**
      * Creates a new instance of the wagon
      */
@@ -85,8 +90,10 @@ public final class SimpleStorageServiceWagon extends AbstractWagon {
     protected void connectToRepository(Repository repository, AuthenticationInfo authenticationInfo,
                                        ProxyInfoProvider proxyInfoProvider) throws AuthenticationException {
         if (this.amazonS3 == null) {
+            log.info("Using profile {} for aws", defaultAwsProfile);
+
             AuthenticationInfoAWSCredentialsProviderChain credentialsProvider =
-                    new AuthenticationInfoAWSCredentialsProviderChain(authenticationInfo);
+                    new AuthenticationInfoAWSCredentialsProviderChain(defaultAwsProfile, authenticationInfo);
             ClientConfiguration clientConfiguration = S3Utils.getClientConfiguration(proxyInfoProvider);
 
             this.bucketName = S3Utils.getBucketName(repository);

@@ -48,7 +48,7 @@ And plugin dependency:
       <extension>
       <groupId>fi.yle.tools</groupId>
       <artifactId>aws-maven</artifactId>
-      <version>1.4.0</version>
+      <version>1.4.7</version>
       </extension>
       ...
     </extensions>
@@ -112,6 +112,19 @@ Alternatively, the access and secret keys for the account can be provided using
 * The Amazon EC2 [Instance Metadata Service][instance-metadata]
 * AWS-Profile ( Can be overridden with AWS_PROFILE variable )
 
+Note: you can also overwrite the aws profile name in the servers section in the settings.xml as follows:
+
+```xml
+<servers>
+  <server>
+    <id>id-of-the-repo-in-pom</id>
+    <configuration>
+      <defaultAwsProfile>your-profile</defaultAwsProfile>
+    </configuration>
+  </server>
+</servers>
+```
+
 ## Using IAM roles
 
 ### By using environment variables
@@ -155,10 +168,11 @@ permissions on objects.  A bucket policy can be set in the [AWS Console][console
 
 In order to make the contents of a bucket public you need to add statements with the following details to your policy:
 
-| Effect  | Principal | Action       | Amazon Resource Name (ARN)
-| ------- | --------- | ------------ | --------------------------
-| `Allow` | `*`       | `ListBucket` | `arn:aws:s3:::<BUCKET>`
-| `Allow` | `*`       | `GetObject`  | `arn:aws:s3:::<BUCKET>/*`
+| Effect  | Principal | Action              | Amazon Resource Name (ARN)
+| ------- | --------- | ------------------- | --------------------------
+| `Allow` | `*`       | `ListBucket`        | `arn:aws:s3:::<BUCKET>`
+| `Allow` | `*`       | `GetBucketLocation` | `arn:aws:s3:::<BUCKET>`
+| `Allow` | `*`       | `GetObject`         | `arn:aws:s3:::<BUCKET>/*`
 
 If your policy is setup properly it should look something like:
 
@@ -169,7 +183,8 @@ If your policy is setup properly it should look something like:
     {
       "Sid": "Stmt1397027243665",
       "Action": [
-        "s3:ListBucket"
+        "s3:ListBucket",
+        "s3:GetBucketLocation"
       ],
       "Effect": "Allow",
       "Resource": "arn:aws:s3:::<BUCKET>",
