@@ -8,9 +8,11 @@ Wagon also works with Leiningen out of the box.
 
 Add following to your `project.clj`
 
-    :plugins [[fi.yle.tools/aws-maven "1.4.1"]]
+    :plugins [[fi.yle.tools/aws-maven "1.4.2"]]
     :plugin-repositories [["yle-repo" {:url       "https://maven.yle.fi/release"
                                        :snapshots false}]]
+
+Latest version is 1.4.2 and it uses AWS SDK version 1.11.495
 
 ## Building and deploying this wagon
 
