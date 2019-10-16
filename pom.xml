@@ -8,7 +8,7 @@
   <groupId>io.vgs.tools</groupId>
   <artifactId>aws-maven</artifactId>
   <packaging>jar</packaging>
-  <version>1.4.5-SNAPSHOT</version>
+  <version>1.4.5</version>
   <name>Amazon Web Services S3 Maven Wagon Support</name>
   <description>Standard Maven wagon support for s3:// urls and IAM roles</description>
 
