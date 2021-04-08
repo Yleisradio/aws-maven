@@ -21,6 +21,7 @@ import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.BasicSessionCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.S3ClientOptions;
 import com.amazonaws.services.s3.internal.Mimetypes;
 import com.amazonaws.services.s3.model.*;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient;
@@ -61,6 +62,32 @@ public final class SimpleStorageServiceWagon extends AbstractWagon {
 
     private static final String s3DefaultConfigPath = ".s3_config";
 
+    /**
+     * Support MinIO configuration through system properties. System properties will take precedence over settings.xml configuration
+     */
+    public static final String ENDPOINT_KEY = "maven.wagon.s3.endpoint";
+
+    public static final String PROVIDER_KEY = "maven.wagon.s3.s3Provider";
+
+    /**
+     * Support MinIO configuration through Maven's settings.xml:
+     *
+     * <server>
+     *   <id>minio-snapshot</id>
+     *   <username>291cafe6-eceb-43dc-91b3-58be867d9da2</username>
+     *   <password>e383fed0-4645-45f6-acea-65f3748b96c8</password>
+     *   <configuration>
+     *     <wagonProvider>s3</wagonProvider>
+     *     <s3Provider>minio</s3Provider>
+     *     <endpoint>https://minio-tenant-1-hl.minio-tenant-1.svc.cluster.local:4430</endpoint>
+     *   </configuration>
+     * </server>
+     *
+     */
+    private String s3Provider;
+
+    private String endpoint;
+
     private volatile AmazonS3 amazonS3;
 
     private volatile String bucketName;
@@ -81,6 +108,22 @@ public final class SimpleStorageServiceWagon extends AbstractWagon {
         this.baseDirectory = baseDirectory;
     }
 
+    public String getS3Provider() {
+        return s3Provider;
+    }
+
+    public void setS3Provider(String s3Provider) {
+        this.s3Provider = s3Provider;
+    }
+
+    public String getEndpoint() {
+        return endpoint;
+    }
+
+    public void setEndpoint(String endpoint) {
+        this.endpoint = endpoint;
+    }
+
     @Override
     protected void connectToRepository(Repository repository, AuthenticationInfo authenticationInfo,
                                        ProxyInfoProvider proxyInfoProvider) throws AuthenticationException {
@@ -98,9 +141,20 @@ public final class SimpleStorageServiceWagon extends AbstractWagon {
             } else {
                 this.amazonS3 = new AmazonS3Client(credentialsProvider, clientConfiguration);
             }
+            String endpoint = getValue(ENDPOINT_KEY, this.endpoint);
 
-            fi.yle.tools.aws.maven.Region region = fi.yle.tools.aws.maven.Region.fromLocationConstraint(this.amazonS3.getBucketLocation(this.bucketName));
-            this.amazonS3.setEndpoint(region.getEndpoint());
+            if (endpoint != null) {
+                this.amazonS3.setEndpoint(endpoint);
+            } else {
+                fi.yle.tools.aws.maven.Region region = fi.yle.tools.aws.maven.Region.fromLocationConstraint(this.amazonS3.getBucketLocation(this.bucketName));
+                this.amazonS3.setEndpoint(region.getEndpoint());
+            }
+
+            String provider = getValue(PROVIDER_KEY, this.s3Provider);
+            if (provider != null && provider.equals("minio")) {
+                S3ClientOptions options = S3ClientOptions.builder().setPathStyleAccess(true).build();
+                this.amazonS3.setS3ClientOptions(options);
+            }
         }
     }
 
@@ -323,6 +377,15 @@ public final class SimpleStorageServiceWagon extends AbstractWagon {
 
         return new PutObjectRequest(this.bucketName, key, inputStream, objectMetadata)
             .withCannedAcl(CannedAccessControlList.BucketOwnerFullControl);
+    }
+
+    private String getValue(String key, String defaultValue) {
+        String value = System.getProperty(key);
+        if (value == null || value.trim().length() == 0) {
+            return defaultValue;
+        } else {
+            return value;
+        }
     }
 
 }
