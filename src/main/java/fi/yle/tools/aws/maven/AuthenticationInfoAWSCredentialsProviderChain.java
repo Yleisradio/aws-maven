@@ -28,8 +28,8 @@ final class AuthenticationInfoAWSCredentialsProviderChain extends AWSCredentials
     AuthenticationInfoAWSCredentialsProviderChain(AuthenticationInfo authenticationInfo) {
         super(new EnvironmentVariableCredentialsProvider(),
                 new SystemPropertiesCredentialsProvider(),
-                new InstanceProfileCredentialsProvider(),
+                new AuthenticationInfoAWSCredentialsProvider(authenticationInfo),
                 new ProfileCredentialsProvider(),
-                new AuthenticationInfoAWSCredentialsProvider(authenticationInfo));
+                new InstanceProfileCredentialsProvider());
     }
 }
